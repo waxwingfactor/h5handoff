@@ -72,16 +72,24 @@ The additional receipt-contract observation was addressed with typed audit heade
 
 The directory-ancestry observation was addressed by inventorying and reproducing required directory skeletons. A new `foo/../source.h5` fixture successfully packs and verifies with empty `foo` retained. Review C's graph-budget concern was addressed with incremental link enumeration and per-mapping VDS metadata access rather than materializing all names or mappings first.
 
-Final local checks: **80 tests passed**, including **16 reviewer-owned regression cases**; `ruff check .` passed. This checkpoint used Python 3.12.13, h5py 3.16.0 and HDF5 2.0.0 on macOS. Other platform matrix results and published-artifact installation are separate release gates, not results claimed by this reviewer.
+First local checkpoint: **80 tests passed**, including **16 reviewer-owned regression cases**; `ruff check .` passed. That checkpoint used Python 3.12.13, h5py 3.16.0 and HDF5 2.0.0 on macOS. It did not establish the other Python/platform matrix results.
 
-The review was made against an uncommitted release candidate on seed commit `9c66abe12550f84961f4c52fdb65489402f4eae2`. These SHA-256 fingerprints identify the critical code contents checked at the final checkpoint:
+### Reopened after Python 3.14 CI feedback
+
+Actual Linux Python 3.14 CI caught a gap in the initial B5 resolution: non-strict `Path.resolve()` no longer raises on a symlink loop, so report writing could fail only after publishing a valid bundle. This differs from the Python 3.12 behavior verified above. The [official pathlib documentation](https://docs.python.org/3.14/library/pathlib.html#pathlib.Path.resolve) documents the change beginning in Python 3.13.
+
+The revised preflight strictly resolves the report's existing parent, requires that it is a directory, and then checks the canonical report destination against the protected bundle. The reviewer independently checked the source change, added a missing-parent/no-publication regression, and reran the original symlink-loop test. A manual regular-file-parent check also returns status 2 without traceback or bundle publication.
+
+Final checks against commit `12c9de65884d612834e549c134303a2ce0fabd1f`: **90 tests passed on Python 3.12.13 and 90 passed on Python 3.14.4**, both on macOS with h5py 3.16.0/HDF5 2.0.0. The **17 reviewer-owned regression cases** also passed separately on Python 3.14.4, and `ruff check .` passed. The reviewer inspected the same commit's file-stat portability change: it retains identity, size and mtime comparisons across path/descriptor observations, and compares ctime between observations made through the same method. The additional deterministic platform tests pass in these full runs.
+
+These SHA-256 fingerprints identify the critical code contents at this final checkpoint. Other operating-system CI results and published-artifact installation remain separate release gates, not results claimed by this reviewer:
 
 | File | SHA-256 |
 | --- | --- |
 | `src/h5handoff/scan.py` | `543db5f213b5c713a79b46941ddee406948776385cdfd1c57bc2b758eede5909` |
-| `src/h5handoff/bundle.py` | `aa5e6c009d64e8da21a452b2c6bea33bf8232c028736b730fd4ed2fc9b7da3c1` |
-| `src/h5handoff/cli.py` | `4c53613e79a7a701343552cf55271048f14cf6c9e40a5062f4397af63e7e3f3a` |
+| `src/h5handoff/bundle.py` | `e065db668d730b1030526d6446933826104150af96bde2e8d0d2526ba2d8f6ac` |
+| `src/h5handoff/cli.py` | `e6a21b8a18e369c91f84ad21f3eeaa772953180c5a97fac544307ec5e309ad80` |
 | `src/h5handoff/demo.py` | `470423b305da510319c48ed64fad52cab698e3012d16c4f1025e372a0b53fe9d` |
-| `tests/test_review_regressions.py` | `34b6047dc36742e3c0136168446b39f73a95dee6e64c9b1697d70c0c95ebf238` |
+| `tests/test_review_regressions.py` | `84c0822fe6df5f9281581182bdde4b274276c4fd11b71dc92f3dd371a44ed9a4` |
 
 **Recommendation:** merge these reviewed contents after required CI and distribution checks pass. No unresolved must-fix issue remains in this review. The stated trusted-input, quiescent-filesystem, literal-path, raw-working-directory and metadata-only limitations remain material to use.

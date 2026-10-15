@@ -100,7 +100,7 @@ def test_audit_records_an_optional_unknown_filter_without_loading_it(tmp_path):
 
 def test_pack_survives_complete_removal_and_reads_real_values(mixed, tmp_path, monkeypatch):
     before = {
-        str(path.relative_to(mixed)): path.read_bytes()
+        path.relative_to(mixed).as_posix(): path.read_bytes()
         for path in mixed.rglob("*") if path.is_file()
     }
     bundle = tmp_path / "handoff"

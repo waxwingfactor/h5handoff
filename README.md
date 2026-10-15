@@ -80,4 +80,4 @@ Read the [exact supported scope](docs/scope.md), [architecture](docs/architectur
 
 ## Development and evidence
 
-See [contributing](CONTRIBUTING.md), [positioning and constructed scenarios](docs/positioning.md), [review record](docs/reviews.md), and [release validation](docs/release-validation.md). Tests generate synthetic files and independently read relocated data after removing the originals. CI covers Python 3.10, 3.12 and 3.14 on Linux, macOS and Windows, including a clean wheel installation.
+See [contributing](CONTRIBUTING.md), [positioning and constructed scenarios](docs/positioning.md), [review record](docs/reviews.md), and [release validation](docs/release-validation.md), and a [real public EIGER check](docs/real-data-check.md). Tests generate synthetic files and independently read relocated data after removing the originals. CI covers Python 3.10, 3.12 and 3.14 on Linux, macOS and Windows, including a clean wheel installation.
