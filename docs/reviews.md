@@ -33,3 +33,7 @@ The first CI run exposed two platform differences absent from the local3.12 pass
 ## Real public EIGER smoke check
 
 A separate agent tested the public Diamond Light Source Therm_6_1 collection, matching the source record's sizes/checksums and running both NeXus and master entry workflows after hiding the originals. Both passed byte/closure verification and inventoried bitshuffle filter32008. [The record](real-data-check.md) bounds this metadata/transfer test and explicitly excludes detector-image decoding. The final Windows CI rerun also exposed a test-only separator assumption; the independently authored byte-comparison fixture now uses the receipt's specified POSIX path form. No product behavior was relaxed.
+
+## Public distribution gate
+
+Review C subsequently downloaded the actual public v1.0.0 wheel and source archive into new environments, checked their hashes and tag, exercised the installed CLI away from the checkout, read known synthetic arrays after deleting originals, detected same-size tampering, and ran all 90 tests from the published source archive. [Release validation](release-validation.md) records the completed checks and [receipt](validation/v1.0.0.json). No release artifact was silently replaced after testing.
