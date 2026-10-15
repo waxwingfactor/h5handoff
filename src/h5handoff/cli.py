@@ -101,7 +101,13 @@ def main(argv=None):
         if args.command in ("pack", "verify"):
             protected = args.output if args.command == "pack" else args.bundle
             try:
-                collision = report_path.resolve().is_relative_to(protected.resolve())
+                # Non-strict resolve suppresses symlink-loop errors on Python
+                # 3.13+. The new report's parent must already exist and resolve.
+                canonical_parent = report_path.parent.resolve(strict=True)
+                if not canonical_parent.is_dir():
+                    raise NotADirectoryError("JSON output parent must be a directory")
+                canonical_report = canonical_parent / report_path.name
+                collision = canonical_report.is_relative_to(protected.resolve())
             except (OSError, RuntimeError) as error:
                 print(f"h5handoff: cannot resolve report path: {_safe(error)}", file=sys.stderr)
                 return 2

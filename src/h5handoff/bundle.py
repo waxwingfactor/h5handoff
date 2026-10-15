@@ -64,7 +64,14 @@ def _regular(base: Path, relative: str) -> Path:
 
 
 def _stamp(info: os.stat_result) -> tuple:
-    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+    # Windows path stat and fd fstat can give ctime different meanings. Compare
+    # ctime only between two calls of the same kind; keep identity/size/mtime
+    # checks across path and handle. CPython issue: python/cpython#157671.
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+
+def _full_stamp(info: os.stat_result) -> tuple:
+    return (*_stamp(info), info.st_ctime_ns)
 
 
 def _hash(path: Path) -> tuple[str, int]:
@@ -74,13 +81,19 @@ def _hash(path: Path) -> tuple[str, int]:
     digest = hashlib.sha256()
     size = 0
     with path.open("rb") as source:
-        if _stamp(os.fstat(source.fileno())) != _stamp(before):
+        opened = os.fstat(source.fileno())
+        if _stamp(opened) != _stamp(before):
             raise ValueError(f"File changed before hashing: {path.name!r}")
         while block := source.read(_CHUNK):
             digest.update(block)
             size += len(block)
         after = os.fstat(source.fileno())
-    if _stamp(before) != _stamp(after) or _stamp(after) != _stamp(path.stat()):
+    final_path = path.stat()
+    if (
+        _full_stamp(opened) != _full_stamp(after)
+        or _full_stamp(before) != _full_stamp(final_path)
+        or _stamp(after) != _stamp(final_path)
+    ):
         raise ValueError(f"File changed during hashing: {path.name!r}")
     return digest.hexdigest(), size
 
@@ -93,7 +106,8 @@ def _copy(source: Path, target: Path) -> dict:
     digest = hashlib.sha256()
     size = 0
     with source.open("rb") as original, target.open("xb") as copied:
-        if _stamp(os.fstat(original.fileno())) != _stamp(before):
+        opened = os.fstat(original.fileno())
+        if _stamp(opened) != _stamp(before):
             raise PackError(f"Source changed before copying: {source.name!r}")
         while block := original.read(_CHUNK):
             copied.write(block)
@@ -102,7 +116,12 @@ def _copy(source: Path, target: Path) -> dict:
         copied.flush()
         os.fsync(copied.fileno())
         after = os.fstat(original.fileno())
-    if _stamp(before) != _stamp(after) or _stamp(after) != _stamp(source.stat()):
+    final_path = source.stat()
+    if (
+        _full_stamp(opened) != _full_stamp(after)
+        or _full_stamp(before) != _full_stamp(final_path)
+        or _stamp(after) != _stamp(final_path)
+    ):
         raise PackError(f"Source changed during copying: {source.name!r}")
     expected = digest.hexdigest(), size
     if _hash(source) != expected or _hash(target) != expected:

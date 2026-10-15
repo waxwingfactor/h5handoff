@@ -95,6 +95,18 @@ def test_report_path_resolution_failure_is_a_clean_io_error(collection, tmp_path
     assert not destination.exists()
 
 
+def test_missing_report_parent_prevents_bundle_publication(collection, tmp_path):
+    destination = tmp_path / "handoff"
+    result = run_cli(
+        "pack", "run/master.h5", "--root", collection,
+        "--output", destination, "--json", tmp_path / "missing" / "report.json",
+    )
+    assert result.returncode == 2
+    assert "Traceback" not in result.stderr
+    assert not destination.exists()
+    assert not (tmp_path / "missing").exists()
+
+
 def test_verify_fails_when_any_payload_directory_cannot_be_enumerated(
     collection, tmp_path, monkeypatch,
 ):

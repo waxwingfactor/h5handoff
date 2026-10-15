@@ -24,4 +24,8 @@ The test counts and CI results in the PR/release record apply to the exact teste
 
 ## Final local gate
 
-The reviewed implementation passed **80 tests** and Ruff on macOS arm64. That includes 44 independently authored acceptance cases and 16 independent reviewer regressions. Final review B records B1–B5 resolved and source fingerprints; review C and the separate parent-module review A reported no remaining blockers. CI and public-artifact verification are separate gates recorded in [release validation](release-validation.md).
+The reviewed implementation passed **90 tests** and Ruff on macOS arm64. That includes 44 independently authored acceptance cases and 17 independent reviewer regressions plus 9 platform regressions. Final review B records B1–B5 resolved and source fingerprints; review C and the separate parent-module review A reported no remaining blockers. CI and public-artifact verification are separate gates recorded in [release validation](release-validation.md).
+
+## Cross-platform CI findings before merge
+
+The first CI run exposed two platform differences absent from the local3.12 pass. Python3.13+ non-strict path resolution suppresses symlink-loop exceptions, so CLI report preflight now resolves an existing parent strictly. On Windows, path-based stat and handle-based fstat can assign ctime different meanings; cross-method checks now compare file identity, size and mtime, while ctime remains checked between calls of the same kind. Full-file hash checks are retained. The independent acceptance reviewer approved the timestamp patch and added nine deterministic tests for differing-but-stable timestamps, actual metadata changes and identity mismatches. The official behavior is documented in [Python pathlib](https://docs.python.org/3.14/library/pathlib.html#pathlib.Path.resolve) and [CPython issue157671](https://github.com/python/cpython/issues/157671). Actual rerun CI is the platform gate.
