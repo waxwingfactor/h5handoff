@@ -58,4 +58,30 @@ A report path beneath a self-referential directory symlink raises from `Path.res
 - Constructed an external raw-storage fixture and examined the reported dependency metadata for B4.
 - Mutated nested filter-audit receipt structures and confirmed malformed noniterable values return structured failures.
 
-This record describes the initial findings. Resolution and retest evidence must be appended before treating the review as passed.
+## Resolution and final retest
+
+All five findings were addressed before this review's final recommendation:
+
+- **B1 resolved:** report destinations inside a pack output or verified bundle are refused before work. Reviewer regressions cover top-level and payload locations, parent-component aliases, and a symlink alias. Rejection leaves the input bundle valid and does not publish a new output.
+- **B2 resolved:** verification uses incremental directory enumeration that propagates access failures. The regression injects a denied directory enumeration. The original real `chmod(000)` probe was also repeated: verification now returns `ok: false` with `invalid_bundle` and permission-denied context.
+- **B3 resolved:** the unsupported conditional control was removed. Security and scope documentation now accurately state that the scanner does not request decoding or filter-plugin loading and that runtime behavior is not sandboxed.
+- **B4 resolved:** raw dependency records include `offset` and `size`. A fresh raw fixture reports `offset: 0` and `size: 4`.
+- **B5 resolved:** report-path resolution failures are caught and return the documented status 2 without a traceback or published bundle. A self-referential symlink regression passes.
+
+The additional receipt-contract observation was addressed with typed audit headers, arrays and filter records. The reviewer added a no-filter source fixture, changed its empty filter array to an empty object, and confirmed rejection. Warning-only fresh audits now preserve their warnings in the top-level verification report without converting a warning into an error.
+
+The directory-ancestry observation was addressed by inventorying and reproducing required directory skeletons. A new `foo/../source.h5` fixture successfully packs and verifies with empty `foo` retained. Review C's graph-budget concern was addressed with incremental link enumeration and per-mapping VDS metadata access rather than materializing all names or mappings first.
+
+Final local checks: **80 tests passed**, including **16 reviewer-owned regression cases**; `ruff check .` passed. This checkpoint used Python 3.12.13, h5py 3.16.0 and HDF5 2.0.0 on macOS. Other platform matrix results and published-artifact installation are separate release gates, not results claimed by this reviewer.
+
+The review was made against an uncommitted release candidate on seed commit `9c66abe12550f84961f4c52fdb65489402f4eae2`. These SHA-256 fingerprints identify the critical code contents checked at the final checkpoint:
+
+| File | SHA-256 |
+| --- | --- |
+| `src/h5handoff/scan.py` | `543db5f213b5c713a79b46941ddee406948776385cdfd1c57bc2b758eede5909` |
+| `src/h5handoff/bundle.py` | `aa5e6c009d64e8da21a452b2c6bea33bf8232c028736b730fd4ed2fc9b7da3c1` |
+| `src/h5handoff/cli.py` | `4c53613e79a7a701343552cf55271048f14cf6c9e40a5062f4397af63e7e3f3a` |
+| `src/h5handoff/demo.py` | `470423b305da510319c48ed64fad52cab698e3012d16c4f1025e372a0b53fe9d` |
+| `tests/test_review_regressions.py` | `34b6047dc36742e3c0136168446b39f73a95dee6e64c9b1697d70c0c95ebf238` |
+
+**Recommendation:** merge these reviewed contents after required CI and distribution checks pass. No unresolved must-fix issue remains in this review. The stated trusted-input, quiescent-filesystem, literal-path, raw-working-directory and metadata-only limitations remain material to use.

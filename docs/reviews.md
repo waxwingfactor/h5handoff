@@ -16,8 +16,12 @@ Fixes include canonical report-output exclusions, incremental directory enumerat
 
 ## Review A: implementation plus separate bundle review
 
-The scanner author owns `scan.py` and scanner fixtures. Their scanner tests are implementation tests, not independent acceptance. A separate review of the lead-authored bundle/CLI code is being completed before merge; its outcome will be recorded here and in the PR.
+The scanner author owns `scan.py` and scanner fixtures. Their scanner tests are implementation tests, not independent acceptance. In a separate review of the lead-authored bundle/CLI/demo code, the scanner author independently tested clean JSON packing, valid verification, malformed schema and size values, duplicate file records, malformed nested audit fields and extra payload files. All invalid cases were refused. They approved the parent-authored modules with no blocking findings. Optional report-directory preflight was left as a usability improvement; verification warnings are now surfaced in human output.
 
 ## Evidence boundary
 
 The test counts and CI results in the PR/release record apply to the exact tested revision. No external adoption, production datasets or scientific decoding certification is claimed. The published acceptance fixtures are synthetic. Native HDF5 is a trusted-file parser, and payloads may require reader-specific compression plugins.
+
+## Final local gate
+
+The reviewed implementation passed **80 tests** and Ruff on macOS arm64. That includes 44 independently authored acceptance cases and 16 independent reviewer regressions. Final review B records B1–B5 resolved and source fingerprints; review C and the separate parent-module review A reported no remaining blockers. CI and public-artifact verification are separate gates recorded in [release validation](release-validation.md).
